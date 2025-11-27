@@ -1,0 +1,1 @@
+Input two numbers: Sum: 30
