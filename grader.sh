@@ -83,7 +83,7 @@ run_tests() {
         # 1. 실행 파일 실행 시 INPUT_FILE 내용을 입력으로 주입 (<)
         # 2. 실행 결과를 임시 파일에 저장 (>)
         # 실행 파일 실행 input.txt를 stdin으로 주입
-        "$exec_file" < "$INPUT_FILE" > "$temp_output" 2>/dev/null
+        "$exec_file" < "$INPUT_FILE" > "$temp_output" 2>/dev/null # exac_file의 실행 후 에러 메세지 버림 why? 출력 값에만 집중.
         
         echo "    → Output saved to $temp_output"
         
