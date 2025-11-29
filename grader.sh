@@ -71,17 +71,33 @@ compile_code() {
 }
 # [팀원 2 담당] 실행 및 테스트 함수
 run_tests() {
-    echo -e "\n[Step 2 & 3] Running tests and Checking results..."
+    echo -e "\n[Step 2] Running tests..."
+
+    # 컴파일된 .out 파일 찾아서 실행
+    while read -r exec_file; do
+        echo "▶️ Executing $exec_file..."
+        
+        # .out 확장자 제거하고 파일명만 추출.
+        # 이후 filename을 가지고 임시 파일 생성.
+        filename=$(basename "$exec_file" .out)
+        temp_output="/tmp/output_${filename}.txt"
+
+        # 1. 실행 파일 실행 시 INPUT_FILE 내용을 입력으로 주입 (<)
+        # 2. 실행 결과를 임시 파일에 저장 (>)
+        # 실행 파일 실행 input.txt를 stdin으로 주입
+        "$exec_file" < "$INPUT_FILE" > "$temp_output" 2>/dev/null # exac_file의 실행 후 에러 메세지 버림. why? 출력 값에만 집중.
+        
+        echo "📁 → Output saved to $temp_output" # 출력 저장 위치 출력
+        
+    done < <(find "$SRC_DIR" -name "*.out" -type f)
     
-    # TODO: 컴파일된 실행 파일(*.out)들을 찾아서 실행하고 결과를 비교하세요.
-    # 1. 실행 파일 실행 시 INPUT_FILE 내용을 입력으로 주입 (<)
-    # 2. 실행 결과를 임시 파일에 저장 (>)
+    echo "  All tests executed."
+
+    echo -e "\n[Step 3] Checking results..."
+    
+    #TODO: 실행 후 결과를 결과 파일과 비교
     # 3. diff 명령어로 ANSWER_FILE과 비교
     # 4. 결과에 따라 PASS(초록색)/FAIL(빨간색) 출력
-    
-    # 힌트:
-    # ./executable < "$INPUT_FILE" > temp_output.txt
-    # diff_result=$(diff -w temp_output.txt "$ANSWER_FILE")
 }
 
 # [팀원 1 담당] 결과 리포트 및 백업 함수
