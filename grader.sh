@@ -36,18 +36,39 @@ echo "========================================"
 compile_code() {
     echo -e "\n[Step 1] Compiling sources..."
     
-    # TODO: SRC_DIR 내의 모든 .c 파일을 찾아서 컴파일 하세요.
-    # 1. find 명령어로 .c 파일 찾기
-    # 2. 반복문(for)을 돌면서 gcc로 컴파일
-    # 3. 성공하면 실행파일 생성, 실패하면 에러 메시지를 BUILD_LOG에 저장
-    
-    # 힌트:
-    # for file in $(find "$SRC_DIR" -name "*.c"); do
-    #    gcc "$file" -o "${file%.c}.out" 2>> "$BUILD_LOG"
-    #    ...
-    # done
-}
+    # 컴파일 성공/실패 카운트 변수
+    local success_count=0
+    local fail_count=0
 
+    # 1. src 디렉토리 내의 모든 .c 파일 찾기 (while loop 사용)
+    # find 명령어로 찾은 파일 경로를 하나씩 읽어서 file 변수에 담음
+    while read -r file; do
+        # 2. 출력 파일명 생성 (예: src/student1.c -> src/student1.out)
+        # ${file%.c}는 파일명 뒤의 .c를 제거하는 쉘 문법입니다.
+        output_file="${file%.c}.out"
+        
+        # 3. gcc로 컴파일 실행
+        # -o: 실행 파일 이름 지정
+        # 2>>: 에러 메시지(Standard Error)를 BUILD_LOG 파일에 이어쓰기(append)
+        gcc "$file" -o "$output_file" 2>> "$BUILD_LOG"
+        
+        # 4. 컴파일 결과 확인 ($?는 바로 앞 명령어의 종료 코드. 0이면 성공)
+        if [ $? -eq 0 ]; then
+            echo -e "  - $file: ${GREEN}Success${NC}"
+            ((success_count++))
+        else
+            echo -e "  - $file: ${RED}Fail${NC} (Check $BUILD_LOG)"
+            # 로그 파일에 어떤 파일에서 에러가 났는지 구분선 추가
+            echo "----------------------------------------" >> "$BUILD_LOG"
+            echo "Error occurred in: $file" >> "$BUILD_LOG"
+            echo "----------------------------------------" >> "$BUILD_LOG"
+            ((fail_count++))
+        fi
+
+    done < <(find "$SRC_DIR" -name "*.c")
+
+    echo -e "  Result: Success ${GREEN}$success_count${NC}, Fail ${RED}$fail_count${NC}"
+}
 # [팀원 2 담당] 실행 및 테스트 함수
 run_tests() {
     echo -e "\n[Step 2 & 3] Running tests and Checking results..."
