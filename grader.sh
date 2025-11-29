@@ -73,9 +73,13 @@ compile_code() {
 run_tests() {
     echo -e "\n[Step 2] Running tests..."
 
+    local passed_count=0
+    local failed_count=0
+    local failed_files=()  # 실패한 파일 저장할 배열
+
     # 컴파일된 .out 파일 찾아서 실행
     while read -r exec_file; do
-        echo "▶️ Executing $exec_file..."
+        echo "▶️  Executing $exec_file..."
         
         # .out 확장자 제거하고 파일명만 추출.
         # 이후 filename을 가지고 임시 파일 생성.
@@ -87,17 +91,40 @@ run_tests() {
         # 실행 파일 실행 input.txt를 stdin으로 주입
         "$exec_file" < "$INPUT_FILE" > "$temp_output" 2>/dev/null # exac_file의 실행 후 에러 메세지 버림. why? 출력 값에만 집중.
         
-        echo "📁 → Output saved to $temp_output" # 출력 저장 위치 출력
+        echo "📁  Output saved to $temp_output" # 출력 저장 위치 출력
+        
+        # 3. diff 명령어로 ANSWER_FILE과 비교
+        # diff로 정답 파일과 비교 (-w: 공백 차이 무시)
+        if diff -w "$temp_output" "$ANSWER_FILE" > /dev/null 2>&1; then
+            # 일치 → PASS (초록색)
+            echo -e "${GREEN}[PASS]${NC}"
+            ((passed_count++))
+            
+        else
+            # 불일치 → FAIL (빨간색)
+            echo -e "${RED}[FAIL]${NC}"
+            ((failed_count++))
+            
+            failed_files+=("$filename")  # 실패한 파일명 배열에 추가
+        fi
+        
+        # 임시 파일 삭제
+        rm -f "$temp_output"
         
     done < <(find "$SRC_DIR" -name "*.out" -type f)
     
-    echo "  All tests executed."
-
     echo -e "\n[Step 3] Checking results..."
     
-    #TODO: 실행 후 결과를 결과 파일과 비교
-    # 3. diff 명령어로 ANSWER_FILE과 비교
-    # 4. 결과에 따라 PASS(초록색)/FAIL(빨간색) 출력
+    # 실패한 파일 목록 출력
+    echo -e "${GREEN}[PASS]${NC}: $passed_count"
+    echo -e "${RED}[FAIL]${NC}: $failed_count"
+    if [ ${#failed_files[@]} -gt 0 ]; then
+        echo -e "\n❌ Failed Students:"
+        for file in "${failed_files[@]}"; do
+            echo "  - $file"
+        done
+    fi
+
 }
 
 # [팀원 1 담당] 결과 리포트 및 백업 함수
