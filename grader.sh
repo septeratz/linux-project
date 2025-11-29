@@ -115,16 +115,17 @@ run_tests() {
     
     echo -e "\n[Step 3] Checking results..."
     
-    # 실패한 파일 목록 출력
+    # PASS/FAIL 카운트 출력
     echo -e "${GREEN}[PASS]${NC}: $passed_count"
     echo -e "${RED}[FAIL]${NC}: $failed_count"
+
+    # 실패한 파일 목록 출력
     if [ ${#failed_files[@]} -gt 0 ]; then
         echo -e "\n❌ Failed Students:"
         for file in "${failed_files[@]}"; do
             echo "  - $file"
         done
     fi
-
 }
 
 # [팀원 1 담당] 결과 리포트 및 백업 함수
