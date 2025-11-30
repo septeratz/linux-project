@@ -130,12 +130,50 @@ run_tests() {
 
 # [팀원 1 담당] 결과 리포트 및 백업 함수
 generate_report() {
-    echo -e "\n[Step 4] Generating Report..."
+     echo -e "\n[Step 4] Generating Report..."
     
-    # TODO: 최종 결과 파일(RESULT_FILE)에 점수나 통과한 파일 목록을 정리해두세요.
-    # TODO: 환경변수 MODE가 "backup"이면 소스코드와 로그를 압축(tar)해서 BACKUP_DIR로 이동
+    # 1. 리포트 헤더 작성 (RESULT_FILE에 덮어쓰기)
+    {
+        echo "========================================"
+        echo "           AGB Final Report             "
+        echo "========================================"
+        echo "Date: $(date)"
+        echo "User: $(whoami)"
+        echo "----------------------------------------"
+    } > "$RESULT_FILE"
+
+    # 2. 컴파일 에러 로그 요약 추가
+    # -s 옵션: 파일 크기가 0보다 크면(내용이 있으면) 참
+    if [ -s "$BUILD_LOG" ]; then
+        echo "[Build Status]: Errors Found" >> "$RESULT_FILE"
+        echo "Check details in build_error.log" >> "$RESULT_FILE"
+    else
+        echo "[Build Status]: All Clean (No Errors)" >> "$RESULT_FILE"
+    fi
     
-    echo "Report saved to $RESULT_FILE"
+    echo "Report saved to: $RESULT_FILE"
+
+    # 3. 백업 기능 (환경변수 MODE가 'backup'일 때만 동작)
+    if [ "$MODE" == "backup" ]; then
+        echo -e "${GREEN}Backup Mode ON!${NC} Archiving files..."
+        
+        # 날짜가 포함된 고유한 백업 파일명 생성
+        BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+        
+        # tar 명령어로 src와 logs 폴더 압축
+        # -c: 생성, -z: gzip압축, -f: 파일명 지정
+        # 2>/dev/null: tar 실행 중 나오는 경고 메시지 숨김
+        tar -czf "$BACKUP_DIR/$BACKUP_NAME" "$SRC_DIR" "$LOG_DIR" 2>/dev/null
+        
+        if [ $? -eq 0 ]; then
+            echo -e "Backup created at: ${GREEN}$BACKUP_DIR/$BACKUP_NAME${NC}"
+            echo "Backup File: $BACKUP_NAME" >> "$RESULT_FILE"
+        else
+            echo -e "${RED}Backup Failed!${NC}"
+        fi
+    else
+        echo "Tip: Run 'export MODE=backup' to enable auto-backup."
+    fi
 }
 
 # --- 3. 메인 실행 로직 ---
